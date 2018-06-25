@@ -32,7 +32,7 @@ class data_loader(object):
 
     def train_test_split(self):
         all_images = np.array(list(self.total_data.keys()))
-        all_labels = np.array(list(self.total_data.values()))
+        all_labels = np.array(list(self.total_data.values()),dtype=np.float32)
 
         self.train_data,self.val_data,self.train_labels,self.val_labels = train_test_split(all_images,all_labels)
 
