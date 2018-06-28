@@ -34,9 +34,9 @@ class RNN_model(object):
         for i in range(self.model_dict["num_of_steps"]):
             input_ = tf.concat([label,x],axis = 1)
             label,state = lstm(input_,state)
-            label = tf.nn.sigmoid(tf.matmul(label,w)+b)
+            label = tf.matmul(label,w)+b
             labels.append(label)
-        return tf.squeeze(labels,axis = -1)
+        return tf.reshape(tf.squeeze(labels,axis = -1),[self.model_dict["batch_size"],-1])
 
     def inference(self):
         with tf.device(self.model_dict["devices"][0]):
@@ -67,4 +67,16 @@ class RNN_model(object):
             full_1 = tf.nn.relu(tf.add(tf.matmul(reshaped,full_1_w),full_1_b))
             #out = tf.add(tf.matmul(full_1,full_2_w),full_2_b)
 
-        return self.RNN(full_1,rnn_1_w,rnn_1_b)
+            out = self.RNN(full_1,rnn_1_w,rnn_1_b)
+
+        with tf.name_scope("loss"):
+            self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = out,labels = self.Y))
+
+        with tf.name_scope("optimizer"):
+            self.optimizer = tf.train.AdamOptimizer(self.model_dict["lr"]).minimize(self.loss)
+
+        with tf.name_scope("accuracy"):
+            self.predictions = tf.cast(tf.greater_equal(out,0.5),tf.float32)
+            self.accuracy = tf.reduce_mean(tf.reduce_mean(tf.cast(tf.equal(self.predictions,self.Y),tf.float32),axis = 1))
+
+        return [self.loss,self.optimizer,self.predictions]

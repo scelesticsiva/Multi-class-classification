@@ -56,5 +56,9 @@ class model(object):
         with tf.name_scope("optimizer"):
             self.optimizer = tf.train.AdamOptimizer(self.model_dict["lr"]).minimize(self.loss)
 
+        with tf.name_scope("accuracy"):
+            self.predictions = tf.cast(tf.greater_equal(out,0.5),tf.float32)
+            self.accuracy = tf.reduce_mean(tf.reduce_mean(tf.cast(tf.equal(self.predictions,self.Y),tf.float32),axis = 1))
+
 
         return self.optimizer
